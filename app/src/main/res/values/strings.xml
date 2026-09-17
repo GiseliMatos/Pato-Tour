@@ -1,3 +1,33 @@
 <resources>
     <string name="app_name">PatoTour</string>
+    <string name="new_point">Novo ponto</string>
+    <string name="edit_point">Editar ponto</string>
+    <string name="new_point_title">Novo ponto turístico</string>
+    <string name="edit_point_title">Editar ponto turístico</string>
+    <string name="form_subtitle">Registre sua descoberta para acesso off-line.</string>
+    <string name="search_points">Buscar locais salvos...</string>
+    <string name="registered_points">Pontos cadastrados</string>
+    <string name="points_count">%1$d itens</string>
+    <string name="empty_points">Nenhum ponto cadastrado</string>
+    <string name="empty_points_hint">Seu mapa está vazio. Adicione sua primeira descoberta.</string>
+    <string name="add_point">Adicionar ponto</string>
+    <string name="point_name">Nome do ponto</string>
+    <string name="point_name_hint">Ex.: Cachoeira escondida</string>
+    <string name="description">Descrição</string>
+    <string name="description_hint">Descreva o acesso e as características do local...</string>
+    <string name="location_coordinates">Coordenadas do local</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+    <string name="get_address">Obter endereço</string>
+    <string name="address_unavailable">Endereço indisponível off-line</string>
+    <string name="coordinates_required">Informe latitude e longitude válidas.</string>
+    <string name="required_fields">Preencha nome, latitude e longitude.</string>
+    <string name="upload_photo">Adicionar foto do ponto</string>
+    <string name="photo_hint">Imagens de boa qualidade são recomendadas</string>
+    <string name="take_photo">Tirar foto com a câmera</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save_offline">Salvar off-line</string>
+    <string name="points">Pontos</string>
+    <string name="map">Mapa</string>
+    <string name="settings">Configurações</string>
 </resources>

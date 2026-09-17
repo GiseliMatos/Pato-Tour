@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">PatoTour</string>
+    <string name="new_point">New point</string>
+    <string name="edit_point">Edit point</string>
+    <string name="new_point_title">New tourist point</string>
+    <string name="edit_point_title">Edit tourist point</string>
+    <string name="form_subtitle">Save your discovery for offline access.</string>
+    <string name="search_points">Search saved locations...</string>
+    <string name="registered_points">Registered points</string>
+    <string name="points_count">%1$d items</string>
+    <string name="empty_points">No points recorded</string>
+    <string name="empty_points_hint">Your map is blank. Add your first discovery.</string>
+    <string name="add_point">Add point</string>
+    <string name="point_name">Point name</string>
+    <string name="point_name_hint">e.g. Hidden waterfall</string>
+    <string name="description">Description</string>
+    <string name="description_hint">Describe access and unique features...</string>
+    <string name="location_coordinates">Location coordinates</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+    <string name="get_address">Get address</string>
+    <string name="address_unavailable">Address unavailable offline</string>
+    <string name="coordinates_required">Enter valid latitude and longitude.</string>
+    <string name="required_fields">Fill in name, latitude and longitude.</string>
+    <string name="upload_photo">Add point photo</string>
+    <string name="photo_hint">High quality images are recommended</string>
+    <string name="take_photo">Take a photo</string>
+    <string name="cancel">Cancel</string>
+    <string name="save_offline">Save offline</string>
+    <string name="points">Points</string>
+    <string name="map">Map</string>
+    <string name="settings">Settings</string>
+</resources>
