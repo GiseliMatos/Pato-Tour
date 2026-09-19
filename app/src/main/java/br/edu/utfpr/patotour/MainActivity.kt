@@ -42,6 +42,7 @@ import androidx.compose.foundation.verticalScroll
  import kotlinx.coroutines.Dispatchers
  import kotlinx.coroutines.launch
  import kotlinx.coroutines.withContext
+import br.edu.utfpr.patotour.ui.screens.ConfiguracoesScreen
  
  private val ExplorerBlue = Color(0xFF004D99)
  private val ExplorerGreen = Color(0xFF1B6D24)
@@ -55,7 +56,7 @@ import androidx.compose.foundation.verticalScroll
      }
  }
  
- private enum class Screen { LIST, FORM }
+ private enum class Screen { LIST, FORM, MAP, SETTINGS }
  
  @Composable
  private fun PatoTourApp() {
@@ -66,13 +67,23 @@ import androidx.compose.foundation.verticalScroll
      var screen by remember { mutableStateOf(Screen.LIST) }
      var editing by remember { mutableStateOf<PontoTuristico?>(null) }
      Surface(color = ExplorerBackground, modifier = Modifier.fillMaxSize()) {
-         when (screen) {
-             Screen.LIST -> PointsScreen(points, { editing = null; screen = Screen.FORM }) { editing = it; screen = Screen.FORM }
-             Screen.FORM -> PointFormScreen(editing, { screen = Screen.LIST }) { point ->
-                scope.launch { repository.salvar(point); screen = Screen.LIST }
+         Scaffold(
+             bottomBar = {
+                 if (screen != Screen.FORM) {
+                     BottomBar(selectedScreen = screen, onNavigate = { novaTela -> screen = novaTela }) }
              }
-         }
-     }
+         ) { padding -> Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+                 when (screen) {
+                     Screen.LIST -> PointsScreen(points, { editing = null; screen = Screen.FORM }) { editing = it; screen = Screen.FORM }
+                     Screen.FORM -> PointFormScreen(editing, { screen = Screen.LIST }) { point ->
+                        scope.launch { repository.salvar(point); screen = Screen.LIST }
+                     }
+                     Screen.MAP -> { Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("") } }
+                     Screen.SETTINGS -> ConfiguracoesScreen()
+                 }
+             }
+          }
+       }
  }
  
  @Composable
@@ -91,7 +102,7 @@ import androidx.compose.foundation.verticalScroll
  private fun PointsScreen(points: List<PontoTuristico>, onAdd: () -> Unit, onEdit: (PontoTuristico) -> Unit) {
      var query by remember { mutableStateOf("") }
      val filtered = points.filter { it.nome.contains(query, true) || it.enderecoTextual.contains(query, true) }
-     Scaffold(topBar = { ExplorerTopBar(stringResource(R.string.app_name)) }, bottomBar = { BottomBar() }, floatingActionButton = { FloatingActionButton(onClick = onAdd, containerColor = Color(0xFF7D3C00), contentColor = Color.White) { Text("+", fontSize = 28.sp) } }) { padding ->
+     Scaffold(topBar = { ExplorerTopBar(stringResource(R.string.app_name)) }, floatingActionButton = { FloatingActionButton(onClick = onAdd, containerColor = Color(0xFF7D3C00), contentColor = Color.White) { Text("+", fontSize = 28.sp) } }) { padding ->
          LazyColumn(Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(top = 20.dp, bottom = 100.dp)) {
              item { OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), placeholder = { Text(stringResource(R.string.search_points)) }, singleLine = true, shape = RoundedCornerShape(14.dp)) }
              item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) { Text(stringResource(R.string.registered_points), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold); Text(stringResource(R.string.points_count, filtered.size), color = Color.Gray) } }
@@ -151,9 +162,10 @@ import androidx.compose.foundation.verticalScroll
  
  @Composable
  private fun PointImage(uri: String, modifier: Modifier) { val context = LocalContext.current; val bitmap = remember(uri) { if (uri.isBlank()) null else runCatching { android.graphics.BitmapFactory.decodeStream(context.contentResolver.openInputStream(Uri.parse(uri))) }.getOrNull() }; if (bitmap != null) Image(bitmap.asImageBitmap(), null, modifier, contentScale = ContentScale.Crop) else Box(modifier.background(Color(0xFFE1EEF5)), contentAlignment = Alignment.Center) { Text("⌖", fontSize = 34.sp, color = Color.Gray) } }
- 
- @Composable private fun BottomBar() { NavigationBar(containerColor = Color(0xFFDBF1FE)) { NavigationBarItem(true, {}, icon = { Text("≡", fontSize = 22.sp) }, label = { Text(stringResource(R.string.points)) }); NavigationBarItem(false, {}, icon = { Text("⌖", fontSize = 22.sp) }, label = { Text(stringResource(R.string.map)) }); NavigationBarItem(false, {}, icon = { Text("⚙", fontSize = 20.sp) }, label = { Text(stringResource(R.string.settings)) }) } }
- 
+
+ @Composable
+ private fun BottomBar(selectedScreen: Screen, onNavigate: (Screen) -> Unit) { NavigationBar(containerColor = Color(0xFFDBF1FE)) { NavigationBarItem(selectedScreen == Screen.LIST, { onNavigate(Screen.LIST) }, icon = { Text("≡", fontSize = 22.sp) }, label = { Text(stringResource(R.string.points)) }); NavigationBarItem(selected = selectedScreen == Screen.MAP, onClick = { onNavigate(Screen.MAP) }, icon = { Text("⌖", fontSize = 22.sp) }, label = { Text(stringResource(R.string.map)) }); NavigationBarItem(selectedScreen == Screen.SETTINGS, { onNavigate(Screen.SETTINGS) }, icon = { Text("⚙", fontSize = 20.sp) }, label = { Text(stringResource(R.string.settings)) }) } }
+
 private suspend fun reverseGeocode(context: Context, latitude: Double, longitude: Double): String? = withContext(Dispatchers.IO) { runCatching { if (!Geocoder.isPresent()) return@withContext null; Geocoder(context).getFromLocation(latitude, longitude, 1)?.firstOrNull()?.getAddressLine(0) }.getOrNull() }
 
 private fun createCameraUri(context: Context): Uri? = runCatching {
