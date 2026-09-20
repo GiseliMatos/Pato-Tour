@@ -1,4 +1,5 @@
 package br.edu.utfpr.patotour.ui.screens
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,24 +21,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import br.edu.utfpr.patotour.R
 import br.edu.utfpr.patotour.preferences.ConfiguracoesPreferences
+import br.edu.utfpr.patotour.storage.Armazenamento
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.launch
-import br.edu.utfpr.patotour.storage.Cache
 
 @Composable
 fun ConfiguracoesScreen() {
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     val configuracoesPreferences = remember {
         ConfiguracoesPreferences(context)
@@ -51,17 +51,13 @@ fun ConfiguracoesScreen() {
         mutableStateOf(configuracoesPreferences.obterTipoMapa())
     }
 
-    var tamanhoCache by remember {
-        mutableStateOf("Calculando...")
-    }
-
-    var mensagemCache by remember {
-        mutableStateOf<String?>(null)
+    var tamanhoArmazenamento by remember {
+        mutableStateOf("")
     }
 
     LaunchedEffect(Unit) {
-        tamanhoCache = withContext(Dispatchers.IO) {
-            Cache.obterTamanhoCache(context)
+        tamanhoArmazenamento = withContext(Dispatchers.IO) {
+            Armazenamento.obterTamanhoUtilizado(context)
         }
     }
 
@@ -72,7 +68,7 @@ fun ConfiguracoesScreen() {
     ) {
 
         Text(
-            text = "Configurações",
+            text = stringResource(R.string.settings),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
@@ -80,7 +76,7 @@ fun ConfiguracoesScreen() {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Preferências do Mapa",
+            text = stringResource(R.string.map_preferences),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -99,13 +95,16 @@ fun ConfiguracoesScreen() {
             ) {
 
                 Text(
-                    text = "Zoom padrão",
+                    text = stringResource(R.string.default_zoom),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium
                 )
 
                 Text(
-                    text = "Nível atual: ${zoomPadrao.toInt()}",
+                    text = stringResource(
+                        R.string.current_level,
+                        zoomPadrao.toInt()
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -123,7 +122,7 @@ fun ConfiguracoesScreen() {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Tipo de mapa",
+                    text = stringResource(R.string.map_type),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium
                 )
@@ -136,7 +135,7 @@ fun ConfiguracoesScreen() {
                 ) {
 
                     TipoMapaButton(
-                        texto = "Rodoviário",
+                        texto = stringResource(R.string.map_roadmap),
                         selecionado = tipoMapa == "Rodoviário",
                         onClick = {
                             tipoMapa = "Rodoviário"
@@ -146,7 +145,7 @@ fun ConfiguracoesScreen() {
                     )
 
                     TipoMapaButton(
-                        texto = "Satélite",
+                        texto = stringResource(R.string.map_satellite),
                         selecionado = tipoMapa == "Satélite",
                         onClick = {
                             tipoMapa = "Satélite"
@@ -164,7 +163,7 @@ fun ConfiguracoesScreen() {
                 ) {
 
                     TipoMapaButton(
-                        texto = "Híbrido",
+                        texto = stringResource(R.string.map_hybrid),
                         selecionado = tipoMapa == "Híbrido",
                         onClick = {
                             tipoMapa = "Híbrido"
@@ -174,7 +173,7 @@ fun ConfiguracoesScreen() {
                     )
 
                     TipoMapaButton(
-                        texto = "Terreno",
+                        texto = stringResource(R.string.map_terrain),
                         selecionado = tipoMapa == "Terreno",
                         onClick = {
                             tipoMapa = "Terreno"
@@ -189,7 +188,7 @@ fun ConfiguracoesScreen() {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Dados",
+            text = stringResource(R.string.data),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -208,7 +207,7 @@ fun ConfiguracoesScreen() {
             ) {
 
                 Text(
-                    text = "Armazenamento local",
+                    text = stringResource(R.string.local_storage),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium
                 )
@@ -216,44 +215,23 @@ fun ConfiguracoesScreen() {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Cache atual: $tamanhoCache",
+                    text = if (tamanhoArmazenamento.isBlank()) {
+                        stringResource(R.string.calculating)
+                    } else {
+                        stringResource(
+                            R.string.storage_used,
+                            tamanhoArmazenamento
+                        )
+                    },
                     style = MaterialTheme.typography.bodyMedium
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Arquivos temporários utilizados pelo aplicativo podem ser removidos sem excluir os pontos turísticos cadastrados.",
+                    text = stringResource(R.string.storage_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedButton(
-                    onClick = {
-                        scope.launch {
-
-                            tamanhoCache = withContext(Dispatchers.IO) {
-                                Cache.limparCache(context)
-                                Cache.obterTamanhoCache(context)
-                            }
-
-                            mensagemCache = "Cache limpo com sucesso."
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Limpar cache")
-                }
-            }
-            mensagemCache?.let {
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }

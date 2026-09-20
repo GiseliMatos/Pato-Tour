@@ -4,30 +4,25 @@ import android.content.Context
 import java.io.File
 import java.util.Locale
 
-object Cache {
+object Armazenamento {
 
-    fun obterTamanhoCache(context: Context): String {
-        var tamanho = calcularTamanho(context.cacheDir)
+    fun obterTamanhoUtilizado(context: Context): String {
+        var tamanho = 0L
 
-        context.externalCacheDir?.let {
+        val diretorioInterno = File(context.applicationInfo.dataDir)
+        tamanho += calcularTamanho(diretorioInterno)
+
+        context.getExternalFilesDir(null)?.let {
             tamanho += calcularTamanho(it)
         }
 
         return formatarTamanho(tamanho)
     }
 
-    fun limparCache(context: Context) {
-        context.cacheDir.listFiles()?.forEach {
-            it.deleteRecursively()
-        }
-
-        context.externalCacheDir?.listFiles()?.forEach {
-            it.deleteRecursively()
-        }
-    }
-
     private fun calcularTamanho(arquivo: File): Long {
-        if (!arquivo.exists()) return 0L
+        if (!arquivo.exists()) {
+            return 0L
+        }
 
         if (arquivo.isFile) {
             return arquivo.length()
