@@ -1,10 +1,11 @@
-package br.edu.utfpr.patotour.database.local
+package br.edu.utfpr.patotour.data.database
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import br.edu.utfpr.patotour.model.PontoTuristico
+import br.edu.utfpr.patotour.data.local.PontoTuristicoDao
+import br.edu.utfpr.patotour.data.model.PontoTuristico
 
 @Database(entities = [PontoTuristico::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
