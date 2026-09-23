@@ -47,9 +47,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.edu.utfpr.patotour.R
 import br.edu.utfpr.patotour.data.model.PontoTuristico
+import br.edu.utfpr.patotour.service.GeocodingService
 import br.edu.utfpr.patotour.ui.components.TopBar
 import br.edu.utfpr.patotour.util.createCameraUri
-import br.edu.utfpr.patotour.util.reverseGeocode
 import kotlinx.coroutines.launch
 
 @Composable
@@ -60,6 +60,8 @@ fun PointFormScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    val geocodingService = remember { GeocodingService(context) }
 
     var name by remember { mutableStateOf(initial?.nome ?: "") }
     var description by remember { mutableStateOf(initial?.descricao ?: "") }
@@ -156,7 +158,7 @@ fun PointFormScreen(
                             message = context.getString(R.string.coordinates_required)
                         } else {
                             scope.launch {
-                                address = reverseGeocode(context, lat, lon) ?: context.getString(R.string.address_unavailable)
+                                address = geocodingService.buscarEnderecoPorCoordenadas(lat, lon) ?: context.getString(R.string.address_unavailable)
                             }
                         }
                     }, Modifier.fillMaxWidth()) { Text(stringResource(R.string.get_address)) }
