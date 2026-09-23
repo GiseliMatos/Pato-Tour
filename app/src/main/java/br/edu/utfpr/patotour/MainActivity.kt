@@ -38,7 +38,8 @@ import androidx.compose.foundation.verticalScroll
  import br.edu.utfpr.patotour.database.local.AppDatabase
  import br.edu.utfpr.patotour.model.PontoTuristico
  import br.edu.utfpr.patotour.repository.PontoTuristicoRepository
- import br.edu.utfpr.patotour.ui.theme.PatoTourTheme
+import br.edu.utfpr.patotour.service.GeocodingService
+import br.edu.utfpr.patotour.ui.theme.PatoTourTheme
  import kotlinx.coroutines.Dispatchers
  import kotlinx.coroutines.launch
  import kotlinx.coroutines.withContext
@@ -119,6 +120,9 @@ import androidx.compose.foundation.verticalScroll
  private fun PointFormScreen(initial: PontoTuristico?, onBack: () -> Unit, onSave: (PontoTuristico) -> Unit) {
      val context = LocalContext.current
      val scope = rememberCoroutineScope()
+
+     val geocodingService = remember { GeocodingService(context) }
+
      var name by remember { mutableStateOf(initial?.nome ?: "") }
      var description by remember { mutableStateOf(initial?.descricao ?: "") }
      var latitude by remember { mutableStateOf(initial?.latitude?.toString() ?: "") }
@@ -133,11 +137,38 @@ import androidx.compose.foundation.verticalScroll
          Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
              Text(if (initial == null) stringResource(R.string.new_point_title) else stringResource(R.string.edit_point_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color(0xFF071E27))
              Text(stringResource(R.string.form_subtitle), color = Color.Gray)
-            PhotoPicker(imageUri) { picker.launch("image/*") }
-            OutlinedButton(onClick = { cameraUri = createCameraUri(context); cameraUri?.let(camera::launch) }, Modifier.fillMaxWidth()) { Text(stringResource(R.string.take_photo)) }
+             PhotoPicker(imageUri) { picker.launch("image/*") }
+             OutlinedButton(onClick = { cameraUri = createCameraUri(context); cameraUri?.let(camera::launch) }, Modifier.fillMaxWidth()) { Text(stringResource(R.string.take_photo)) }
              FormField(stringResource(R.string.point_name), name, { name = it }, stringResource(R.string.point_name_hint))
              FormField(stringResource(R.string.description), description, { description = it }, stringResource(R.string.description_hint), singleLine = false)
-             Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(14.dp)) { Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { Text(stringResource(R.string.location_coordinates), fontWeight = FontWeight.Bold, color = ExplorerGreen); Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { FormField(stringResource(R.string.latitude), latitude, { latitude = it }, "-23.5505", Modifier.weight(1f), true); FormField(stringResource(R.string.longitude), longitude, { longitude = it }, "-46.6333", Modifier.weight(1f), true) }; OutlinedButton(onClick = { val lat = latitude.toDoubleOrNull(); val lon = longitude.toDoubleOrNull(); if (lat == null || lon == null) message = context.getString(R.string.coordinates_required) else scope.launch { address = reverseGeocode(context, lat, lon) ?: context.getString(R.string.address_unavailable) } }, Modifier.fillMaxWidth()) { Text(stringResource(R.string.get_address)) }; if (address.isNotBlank()) Text(address, color = Color.DarkGray) } }
+
+             Card(colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(14.dp)) {
+                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                     Text(stringResource(R.string.location_coordinates), fontWeight = FontWeight.Bold, color = ExplorerGreen);
+                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                         FormField(stringResource(R.string.latitude), latitude, { latitude = it }, "-23.5505", Modifier.weight(1f), true);
+                         FormField(stringResource(R.string.longitude), longitude, { longitude = it }, "-46.6333", Modifier.weight(1f), true) };
+
+                     OutlinedButton(
+                         onClick = {
+                             val lat = latitude.toDoubleOrNull();
+                             val lon = longitude.toDoubleOrNull();
+                             if (lat == null || lon == null) {
+                                 message = context.getString(R.string.coordinates_required)
+                             } else {
+                                 scope.launch {
+                                     val resultado = geocodingService.buscarEnderecoPorCoordenadas(lat, lon)
+                                     address = resultado ?: context.getString(R.string.address_unavailable)
+                                 }
+                             }
+                         },
+                         modifier = Modifier.fillMaxWidth()
+                     ) {
+                         Text(stringResource(R.string.get_address))
+                     };
+
+                     if (address.isNotBlank()) Text(address, color = Color.DarkGray) }
+             }
              message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
          }
      }
@@ -153,8 +184,6 @@ import androidx.compose.foundation.verticalScroll
  private fun PointImage(uri: String, modifier: Modifier) { val context = LocalContext.current; val bitmap = remember(uri) { if (uri.isBlank()) null else runCatching { android.graphics.BitmapFactory.decodeStream(context.contentResolver.openInputStream(Uri.parse(uri))) }.getOrNull() }; if (bitmap != null) Image(bitmap.asImageBitmap(), null, modifier, contentScale = ContentScale.Crop) else Box(modifier.background(Color(0xFFE1EEF5)), contentAlignment = Alignment.Center) { Text("⌖", fontSize = 34.sp, color = Color.Gray) } }
  
  @Composable private fun BottomBar() { NavigationBar(containerColor = Color(0xFFDBF1FE)) { NavigationBarItem(true, {}, icon = { Text("≡", fontSize = 22.sp) }, label = { Text(stringResource(R.string.points)) }); NavigationBarItem(false, {}, icon = { Text("⌖", fontSize = 22.sp) }, label = { Text(stringResource(R.string.map)) }); NavigationBarItem(false, {}, icon = { Text("⚙", fontSize = 20.sp) }, label = { Text(stringResource(R.string.settings)) }) } }
- 
-private suspend fun reverseGeocode(context: Context, latitude: Double, longitude: Double): String? = withContext(Dispatchers.IO) { runCatching { if (!Geocoder.isPresent()) return@withContext null; Geocoder(context).getFromLocation(latitude, longitude, 1)?.firstOrNull()?.getAddressLine(0) }.getOrNull() }
 
 private fun createCameraUri(context: Context): Uri? = runCatching {
     val values = ContentValues().apply {
