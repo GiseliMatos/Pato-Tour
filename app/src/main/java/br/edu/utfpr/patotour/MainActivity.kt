@@ -21,8 +21,11 @@
  import androidx.lifecycle.viewmodel.viewModelFactory
  import br.edu.utfpr.patotour.data.model.PontoTuristico
  import br.edu.utfpr.patotour.data.repository.PontoTuristicoRepository
- import br.edu.utfpr.patotour.ui.screens.PointFormScreen
- import br.edu.utfpr.patotour.ui.screens.PointsScreen
+import br.edu.utfpr.patotour.ui.screens.PointFormScreen
+import br.edu.utfpr.patotour.ui.screens.PointsScreen
+import br.edu.utfpr.patotour.ui.screens.MapScreen
+import br.edu.utfpr.patotour.ui.screens.SettingsScreen
+import br.edu.utfpr.patotour.ui.components.MainDestination
  import br.edu.utfpr.patotour.ui.theme.PatoTourTheme
  import br.edu.utfpr.patotour.ui.viewmodel.PontoTuristicoViewModel
 
@@ -39,7 +42,7 @@
      }
  }
 
- private enum class Screen { LIST, FORM }
+private enum class Screen { LIST, FORM, MAP, SETTINGS }
 
  @Composable
  fun PatoTourApp(repository: PontoTuristicoRepository) {
@@ -54,13 +57,16 @@
 
      var screen by rememberSaveable { mutableStateOf(Screen.LIST) }
      var editing by remember { mutableStateOf<PontoTuristico?>(null) }
+     var mapFocus by remember { mutableStateOf<PontoTuristico?>(null) }
 
      Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
          when (screen) {
              Screen.LIST -> PointsScreen(
                  points = points,
                  onAdd = { editing = null; screen = Screen.FORM },
-                 onEdit = { editing = it; screen = Screen.FORM }
+                 onEdit = { editing = it; screen = Screen.FORM },
+                 onNavigate = { destination -> screen = destination.toScreen() },
+                 onViewOnMap = { point -> mapFocus = point; screen = Screen.MAP }
              )
              Screen.FORM -> PointFormScreen(
                  initial = editing,
@@ -70,6 +76,14 @@
                      screen = Screen.LIST
                  }
              )
+             Screen.MAP -> MapScreen(points, mapFocus, onBack = { screen = Screen.LIST }, onNavigate = { destination -> screen = destination.toScreen() })
+             Screen.SETTINGS -> SettingsScreen(onBack = { screen = Screen.LIST }, onNavigate = { destination -> screen = destination.toScreen() })
          }
      }
  }
+
+private fun MainDestination.toScreen(): Screen = when (this) {
+    MainDestination.POINTS -> Screen.LIST
+    MainDestination.MAP -> Screen.MAP
+    MainDestination.SETTINGS -> Screen.SETTINGS
+}

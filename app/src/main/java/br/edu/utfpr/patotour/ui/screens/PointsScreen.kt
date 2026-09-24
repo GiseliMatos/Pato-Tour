@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import br.edu.utfpr.patotour.R
 import br.edu.utfpr.patotour.data.model.PontoTuristico
 import br.edu.utfpr.patotour.ui.components.BottomBar
+import br.edu.utfpr.patotour.ui.components.MainDestination
 import br.edu.utfpr.patotour.ui.components.TopBar
 import br.edu.utfpr.patotour.ui.components.PointCard
 
@@ -37,14 +38,16 @@ import br.edu.utfpr.patotour.ui.components.PointCard
 fun PointsScreen(
     points: List<PontoTuristico>,
     onAdd: () -> Unit,
-    onEdit: (PontoTuristico) -> Unit
+    onEdit: (PontoTuristico) -> Unit,
+    onNavigate: (MainDestination) -> Unit,
+    onViewOnMap: (PontoTuristico) -> Unit
 ) {
     var query by remember { mutableStateOf("") }
     val filtered = points.filter { it.nome.contains(query, true) || it.enderecoTextual.contains(query, true) }
 
     Scaffold(
         topBar = { TopBar(stringResource(R.string.app_name)) },
-        bottomBar = { BottomBar() },
+        bottomBar = { BottomBar(MainDestination.POINTS, onNavigate) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAdd,
@@ -63,6 +66,7 @@ fun PointsScreen(
                     query,
                     { query = it },
                     Modifier.fillMaxWidth(),
+                    leadingIcon = { Text("⌕", fontSize = 28.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     placeholder = { Text(stringResource(R.string.search_points)) },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp)
@@ -88,7 +92,13 @@ fun PointsScreen(
             if (filtered.isEmpty()) {
                 item { EmptyState(onAdd) }
             } else {
-                items(filtered, key = { it.id }) { point -> PointCard(point) { onEdit(point) } }
+                items(filtered, key = { it.id }) { point ->
+                    PointCard(
+                        point = point,
+                        onEdit = { onEdit(point) },
+                        onViewOnMap = { onViewOnMap(point) }
+                    )
+                }
             }
         }
     }

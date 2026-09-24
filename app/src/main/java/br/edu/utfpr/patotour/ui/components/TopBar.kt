@@ -34,7 +34,7 @@ fun TopBar(title: String, back: (() -> Unit)? = null) {
                     modifier = Modifier.size(40.dp).clickable { back() }
                 )
             } else {
-                Spacer(Modifier.width(40.dp))
+                Text("☰", fontSize = 26.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(40.dp))
             }
             Text(
                 title,
@@ -44,7 +44,8 @@ fun TopBar(title: String, back: (() -> Unit)? = null) {
                 modifier = Modifier.weight(1f),
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.width(40.dp))
+            if (back == null) Text("●", fontSize = 28.sp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
+            else Spacer(Modifier.width(40.dp))
         }
     }
 }
