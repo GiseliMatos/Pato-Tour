@@ -18,6 +18,18 @@
     <string name="location_coordinates">Location coordinates</string>
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
+    <string name="latitude_hint">-23.5505</string>
+    <string name="longitude_hint">-46.6333</string>
+    <string name="select_on_map">Select on map</string>
+    <string name="select_location_title">Select location</string>
+    <string name="select_location_hint">Tap the map to choose a location</string>
+    <string name="selected_location">Selected location</string>
+    <string name="coordinates_selected">Selected coordinates: %1$s, %2$s</string>
+    <string name="confirm_location">Confirm location</string>
+    <string name="address">Address</string>
+    <string name="address_hint">Tourist point address</string>
+    <string name="point_photo">Point photo</string>
+    <string name="no_photo">No photo</string>
     <string name="get_address">Get address</string>
     <string name="address_unavailable">Address unavailable offline</string>
     <string name="coordinates_required">Enter valid latitude and longitude.</string>
@@ -27,6 +39,7 @@
     <string name="take_photo">Take a photo</string>
     <string name="cancel">Cancel</string>
     <string name="save_offline">Save offline</string>
+    <string name="view_on_map">View on map</string>
     <string name="points">Points</string>
     <string name="map">Map</string>
     <string name="settings">Settings</string>
@@ -43,4 +56,10 @@
     <string name="storage_used">Storage used: %1$s</string>
     <string name="storage_description">Includes data and preferences stored locally by the application.</string>
     <string name="calculating">Calculating...</string>
+    <string name="map_title">Points map</string>
+    <string name="map_type_value">Map type: %1$s</string>
+    <string name="empty_map">No points recorded to display on the map.</string>
+    <string name="map_points_list">Points on map</string>
+    <string name="use_current_location">Use my current location</string>
+    <string name="enable_location">Enable location</string>
 </resources>

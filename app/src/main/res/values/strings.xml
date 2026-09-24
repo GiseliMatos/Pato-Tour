@@ -18,6 +18,18 @@
     <string name="location_coordinates">Coordenadas do local</string>
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
+    <string name="latitude_hint">-23.5505</string>
+    <string name="longitude_hint">-46.6333</string>
+    <string name="select_on_map">Selecionar no mapa</string>
+    <string name="select_location_title">Selecionar localização</string>
+    <string name="select_location_hint">Toque no mapa para escolher o local</string>
+    <string name="selected_location">Local selecionado</string>
+    <string name="coordinates_selected">Coordenadas selecionadas: %1$s, %2$s</string>
+    <string name="confirm_location">Confirmar localização</string>
+    <string name="address">Endereço</string>
+    <string name="address_hint">Endereço do ponto turístico</string>
+    <string name="point_photo">Foto do ponto</string>
+    <string name="no_photo">Sem foto</string>
     <string name="get_address">Obter endereço</string>
     <string name="address_unavailable">Endereço indisponível off-line</string>
     <string name="coordinates_required">Informe latitude e longitude válidas.</string>
@@ -27,6 +39,7 @@
     <string name="take_photo">Tirar foto com a câmera</string>
     <string name="cancel">Cancelar</string>
     <string name="save_offline">Salvar off-line</string>
+    <string name="view_on_map">Ver no mapa</string>
     <string name="points">Pontos</string>
     <string name="map">Mapa</string>
     <string name="settings">Configurações</string>
@@ -43,4 +56,10 @@
     <string name="storage_used">Espaço utilizado: %1$s</string>
     <string name="storage_description">Inclui dados e preferências armazenados localmente pelo aplicativo.</string>
     <string name="calculating">Calculando...</string>
+    <string name="map_title">Mapa dos pontos</string>
+    <string name="map_type_value">Tipo de mapa: %1$s</string>
+    <string name="empty_map">Nenhum ponto cadastrado para exibir no mapa.</string>
+    <string name="map_points_list">Pontos no mapa</string>
+    <string name="use_current_location">Usar minha localização atual</string>
+    <string name="enable_location">Ativar localização</string>
 </resources>

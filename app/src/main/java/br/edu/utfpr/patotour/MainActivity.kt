@@ -1,8 +1,7 @@
  package br.edu.utfpr.patotour
-
+ 
  import android.os.Bundle
  import androidx.activity.ComponentActivity
- import androidx.activity.compose.rememberLauncherForActivityResult
  import androidx.activity.compose.setContent
  import androidx.activity.enableEdgeToEdge
  import androidx.compose.foundation.layout.fillMaxSize
@@ -21,12 +20,14 @@
  import androidx.lifecycle.viewmodel.viewModelFactory
  import br.edu.utfpr.patotour.data.model.PontoTuristico
  import br.edu.utfpr.patotour.data.repository.PontoTuristicoRepository
+ import br.edu.utfpr.patotour.ui.components.MainDestination
  import br.edu.utfpr.patotour.ui.screens.ConfiguracoesScreen
+ import br.edu.utfpr.patotour.ui.screens.MapScreen
  import br.edu.utfpr.patotour.ui.screens.PointFormScreen
  import br.edu.utfpr.patotour.ui.screens.PointsScreen
  import br.edu.utfpr.patotour.ui.theme.PatoTourTheme
  import br.edu.utfpr.patotour.ui.viewmodel.PontoTuristicoViewModel
-
+ 
  class MainActivity : ComponentActivity() {
      override fun onCreate(savedInstanceState: Bundle?) {
          super.onCreate(savedInstanceState)
@@ -34,49 +35,55 @@
          val repository = (application as PatoTourApplication).pontoTuristicoRepository
          setContent {
              PatoTourTheme {
-                 PatoTourApp(repository = repository)
+                 PatoTourApp(repository)
              }
          }
      }
  }
-
- private enum class Screen { LIST, FORM, SETTINGS }
-
+ 
+ private enum class Screen { LIST, FORM, MAP, SETTINGS }
+ 
  @Composable
  fun PatoTourApp(repository: PontoTuristicoRepository) {
      val viewModel: PontoTuristicoViewModel = viewModel(
-         factory = viewModelFactory {
-             initializer {
-                 PontoTuristicoViewModel(repository)
-             }
-         }
+         factory = viewModelFactory { initializer { PontoTuristicoViewModel(repository) } }
      )
      val points by viewModel.points.collectAsState()
-
      var screen by rememberSaveable { mutableStateOf(Screen.LIST) }
      var editing by remember { mutableStateOf<PontoTuristico?>(null) }
-
+     var mapFocus by remember { mutableStateOf<PontoTuristico?>(null) }
+ 
      Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
          when (screen) {
              Screen.LIST -> PointsScreen(
                  points = points,
                  onAdd = { editing = null; screen = Screen.FORM },
                  onEdit = { editing = it; screen = Screen.FORM },
-                 onSettingsClick = { screen = Screen.SETTINGS }
+                 onNavigate = { screen = it.toScreen() },
+                 onViewOnMap = { point -> mapFocus = point; screen = Screen.MAP }
              )
              Screen.FORM -> PointFormScreen(
                  initial = editing,
                  onBack = { screen = Screen.LIST },
-                 onSave = { point ->
-                     viewModel.salvar(point)
-                     screen = Screen.LIST
-                 }
+                 onSave = { point -> viewModel.salvar(point); screen = Screen.LIST }
+             )
+             Screen.MAP -> MapScreen(
+                 points = points,
+                 focusPoint = mapFocus,
+                 onBack = { screen = Screen.LIST },
+                 onNavigate = { screen = it.toScreen() }
              )
              Screen.SETTINGS -> ConfiguracoesScreen(
-                 onPointsClick = {
-                     screen = Screen.LIST
-                 }
+                 onPointsClick = { screen = Screen.LIST },
+                 onMapClick = { screen = Screen.MAP }
              )
          }
      }
  }
+ 
+ private fun MainDestination.toScreen(): Screen = when (this) {
+     MainDestination.POINTS -> Screen.LIST
+     MainDestination.MAP -> Screen.MAP
+     MainDestination.SETTINGS -> Screen.SETTINGS
+ }
+ 

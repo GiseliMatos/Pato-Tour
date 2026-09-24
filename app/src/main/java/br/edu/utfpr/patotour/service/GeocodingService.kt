@@ -6,6 +6,7 @@ import android.location.Geocoder
 import android.os.Build
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.coroutines.resume
@@ -14,7 +15,7 @@ class GeocodingService(private val context: Context) {
     suspend fun buscarEnderecoPorCoordenadas(
         latitude: Double,
         longitude: Double
-    ): String? = withContext(Dispatchers.IO) {
+    ): String? = withTimeoutOrNull(10_000L) { withContext(Dispatchers.IO) {
         if (!Geocoder.isPresent()) return@withContext null
 
         val geocoder = Geocoder(context, Locale.getDefault())
@@ -45,7 +46,7 @@ class GeocodingService(private val context: Context) {
         } catch (e: Exception) {
             null
         }
-    }
+    } }
 
     private fun formatarEndereco(address: Address): String {
         val rua = address.thoroughfare

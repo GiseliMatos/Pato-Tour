@@ -1,9 +1,9 @@
 package br.edu.utfpr.patotour.ui.screens
 
+import android.Manifest
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -37,7 +38,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -45,12 +45,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
 import br.edu.utfpr.patotour.R
 import br.edu.utfpr.patotour.data.model.PontoTuristico
 import br.edu.utfpr.patotour.service.GeocodingService
 import br.edu.utfpr.patotour.ui.components.TopBar
+import br.edu.utfpr.patotour.ui.components.LocationPickerDialog
+import br.edu.utfpr.patotour.ui.components.TouristPointImage
 import br.edu.utfpr.patotour.util.createCameraUri
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @Composable
 fun PointFormScreen(
@@ -70,6 +75,8 @@ fun PointFormScreen(
     var address by remember { mutableStateOf(initial?.enderecoTextual ?: "") }
     var imageUri by remember { mutableStateOf(initial?.caminhoImagem ?: "") }
     var message by remember { mutableStateOf<String?>(null) }
+    var addressLoading by remember { mutableStateOf(false) }
+    var locationPickerOpen by remember { mutableStateOf(false) }
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) imageUri = uri.toString()
@@ -77,6 +84,25 @@ fun PointFormScreen(
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { captured ->
         if (captured) imageUri = cameraUri?.toString().orEmpty()
+    }
+    val requestCamera = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            cameraUri = createCameraUri(context)
+            cameraUri?.let(camera::launch)
+        }
+    }
+    fun requestAddress(lat: Double?, lon: Double?) {
+        if (lat == null || lon == null || lat !in -90.0..90.0 || lon !in -180.0..180.0) {
+            message = context.getString(R.string.coordinates_required)
+            return
+        }
+        scope.launch {
+            addressLoading = true
+            message = null
+            address = geocodingService.buscarEnderecoPorCoordenadas(lat, lon)
+                ?: context.getString(R.string.address_unavailable)
+            addressLoading = false
+        }
     }
 
     Scaffold(
@@ -130,7 +156,14 @@ fun PointFormScreen(
             Text(stringResource(R.string.form_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             PhotoPicker(imageUri) { picker.launch("image/*") }
-            OutlinedButton(onClick = { cameraUri = createCameraUri(context); cameraUri?.let(camera::launch) }, Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    cameraUri = createCameraUri(context)
+                    cameraUri?.let(camera::launch)
+                } else {
+                    requestCamera.launch(Manifest.permission.CAMERA)
+                }
+            }, Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.take_photo))
             }
 
@@ -148,25 +181,43 @@ fun PointFormScreen(
                         color = MaterialTheme.colorScheme.secondary
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        FormField(stringResource(R.string.latitude), latitude, { latitude = it }, "-23.5505", Modifier.weight(1f), true)
-                        FormField(stringResource(R.string.longitude), longitude, { longitude = it }, "-46.6333", Modifier.weight(1f), true)
+                        FormField(stringResource(R.string.latitude), latitude, { latitude = it }, stringResource(R.string.latitude_hint), Modifier.weight(1f), true)
+                        FormField(stringResource(R.string.longitude), longitude, { longitude = it }, stringResource(R.string.longitude_hint), Modifier.weight(1f), true)
+                    }
+                    OutlinedButton(onClick = { locationPickerOpen = true }, Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.select_on_map))
                     }
                     OutlinedButton(onClick = {
-                        val lat = latitude.toDoubleOrNull()
-                        val lon = longitude.toDoubleOrNull()
-                        if (lat == null || lon == null) {
-                            message = context.getString(R.string.coordinates_required)
-                        } else {
-                            scope.launch {
-                                address = geocodingService.buscarEnderecoPorCoordenadas(lat, lon) ?: context.getString(R.string.address_unavailable)
-                            }
-                        }
-                    }, Modifier.fillMaxWidth()) { Text(stringResource(R.string.get_address)) }
-                    if (address.isNotBlank()) Text(address, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        requestAddress(latitude.toDoubleOrNull(), longitude.toDoubleOrNull())
+                    }, Modifier.fillMaxWidth(), enabled = !addressLoading) {
+                        if (addressLoading) CircularProgressIndicator(Modifier.height(18.dp), strokeWidth = 2.dp)
+                        else Text(stringResource(R.string.get_address))
+                    }
+                    FormField(
+                        stringResource(R.string.address),
+                        address,
+                        { address = it },
+                        stringResource(R.string.address_hint),
+                        singleLine = false
+                    )
                 }
             }
             message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
+    }
+
+    if (locationPickerOpen) {
+        LocationPickerDialog(
+            initialLatitude = latitude.toDoubleOrNull(),
+            initialLongitude = longitude.toDoubleOrNull(),
+            onDismiss = { locationPickerOpen = false },
+            onConfirm = { selectedLatitude, selectedLongitude ->
+                latitude = String.format(Locale.US, "%.6f", selectedLatitude)
+                longitude = String.format(Locale.US, "%.6f", selectedLongitude)
+                locationPickerOpen = false
+                requestAddress(selectedLatitude, selectedLongitude)
+            }
+        )
     }
 }
 
@@ -213,28 +264,8 @@ private fun PhotoPicker(uri: String, onClick: () -> Unit) {
                 Text(stringResource(R.string.photo_hint), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
             }
         } else {
-            PointImage(uri, Modifier.fillMaxSize())
+            TouristPointImage(uri, Modifier.fillMaxSize(), stringResource(R.string.point_photo))
         }
     }
 }
 
-@Composable
-private fun PointImage(uri: String, modifier: Modifier) {
-    val context = LocalContext.current
-    val bitmap = remember(uri) {
-        if (uri.isBlank()) {
-            null
-        } else {
-            runCatching {
-                android.graphics.BitmapFactory.decodeStream(context.contentResolver.openInputStream(Uri.parse(uri)))
-            }.getOrNull()
-        }
-    }
-    if (bitmap != null) {
-        Image(bitmap.asImageBitmap(), null, modifier, contentScale = ContentScale.Crop)
-    } else {
-        Box(modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-            Text("⌖", fontSize = 34.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
