@@ -38,14 +38,16 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun ConfiguracoesScreen(
-    onPointsClick: () -> Unit
+    onPointsClick: () -> Unit,
+    onMapClick: () -> Unit = {}
 ) {
     Scaffold(
         bottomBar = {
             BottomBar(
                 pointsSelected = false,
                 settingsSelected = true,
-                onPointsClick = onPointsClick
+                onPointsClick = onPointsClick,
+                onMapClick = onMapClick
             )
         }
     ) { padding ->
