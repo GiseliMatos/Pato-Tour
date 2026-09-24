@@ -37,14 +37,15 @@ import br.edu.utfpr.patotour.ui.components.PointCard
 fun PointsScreen(
     points: List<PontoTuristico>,
     onAdd: () -> Unit,
-    onEdit: (PontoTuristico) -> Unit
+    onEdit: (PontoTuristico) -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     var query by remember { mutableStateOf("") }
     val filtered = points.filter { it.nome.contains(query, true) || it.enderecoTextual.contains(query, true) }
 
     Scaffold(
         topBar = { TopBar(stringResource(R.string.app_name)) },
-        bottomBar = { BottomBar() },
+        bottomBar = { BottomBar( pointsSelected = true, settingsSelected = false, onSettingsClick = onSettingsClick) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAdd,

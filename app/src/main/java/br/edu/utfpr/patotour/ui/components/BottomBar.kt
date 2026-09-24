@@ -10,10 +10,16 @@ import androidx.compose.ui.unit.sp
 import br.edu.utfpr.patotour.R
 
 @Composable
-fun BottomBar() {
+fun BottomBar(
+    pointsSelected: Boolean = true,
+    settingsSelected: Boolean = false,
+    onPointsClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
+) {
     NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-        NavigationBarItem(true, {}, icon = { Text("≡", fontSize = 22.sp) }, label = { Text(stringResource(R.string.points)) })
+
+        NavigationBarItem(pointsSelected, onPointsClick, icon = { Text("≡", fontSize = 22.sp) }, label = { Text(stringResource(R.string.points)) })
         NavigationBarItem(false, {}, icon = { Text("⌖", fontSize = 22.sp) }, label = { Text(stringResource(R.string.map)) })
-        NavigationBarItem(false, {}, icon = { Text("⚙", fontSize = 20.sp) }, label = { Text(stringResource(R.string.settings)) })
+        NavigationBarItem(settingsSelected, onSettingsClick, icon = { Text("⚙", fontSize = 20.sp) }, label = { Text(stringResource(R.string.settings)) })
     }
 }

@@ -30,4 +30,17 @@
     <string name="points">Pontos</string>
     <string name="map">Mapa</string>
     <string name="settings">Configurações</string>
+    <string name="map_preferences">Preferências do Mapa</string>
+    <string name="default_zoom">Zoom padrão</string>
+    <string name="current_level">Nível atual: %1$d</string>
+    <string name="map_type">Tipo de mapa</string>
+    <string name="map_roadmap">Rodoviário</string>
+    <string name="map_satellite">Satélite</string>
+    <string name="map_hybrid">Híbrido</string>
+    <string name="map_terrain">Terreno</string>
+    <string name="data">Dados</string>
+    <string name="local_storage">Armazenamento local</string>
+    <string name="storage_used">Espaço utilizado: %1$s</string>
+    <string name="storage_description">Inclui dados e preferências armazenados localmente pelo aplicativo.</string>
+    <string name="calculating">Calculando...</string>
 </resources>

@@ -21,6 +21,7 @@
  import androidx.lifecycle.viewmodel.viewModelFactory
  import br.edu.utfpr.patotour.data.model.PontoTuristico
  import br.edu.utfpr.patotour.data.repository.PontoTuristicoRepository
+ import br.edu.utfpr.patotour.ui.screens.ConfiguracoesScreen
  import br.edu.utfpr.patotour.ui.screens.PointFormScreen
  import br.edu.utfpr.patotour.ui.screens.PointsScreen
  import br.edu.utfpr.patotour.ui.theme.PatoTourTheme
@@ -39,7 +40,7 @@
      }
  }
 
- private enum class Screen { LIST, FORM }
+ private enum class Screen { LIST, FORM, SETTINGS }
 
  @Composable
  fun PatoTourApp(repository: PontoTuristicoRepository) {
@@ -60,13 +61,19 @@
              Screen.LIST -> PointsScreen(
                  points = points,
                  onAdd = { editing = null; screen = Screen.FORM },
-                 onEdit = { editing = it; screen = Screen.FORM }
+                 onEdit = { editing = it; screen = Screen.FORM },
+                 onSettingsClick = { screen = Screen.SETTINGS }
              )
              Screen.FORM -> PointFormScreen(
                  initial = editing,
                  onBack = { screen = Screen.LIST },
                  onSave = { point ->
                      viewModel.salvar(point)
+                     screen = Screen.LIST
+                 }
+             )
+             Screen.SETTINGS -> ConfiguracoesScreen(
+                 onPointsClick = {
                      screen = Screen.LIST
                  }
              )
