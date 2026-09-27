@@ -33,6 +33,7 @@ import br.edu.utfpr.patotour.R
 import br.edu.utfpr.patotour.preferences.ConfiguracoesPreferences
 import br.edu.utfpr.patotour.storage.Armazenamento
 import br.edu.utfpr.patotour.ui.components.BottomBar
+import br.edu.utfpr.patotour.ui.components.TopBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -42,6 +43,7 @@ fun ConfiguracoesScreen(
     onMapClick: () -> Unit = {}
 ) {
     Scaffold(
+        topBar = { TopBar(stringResource(R.string.settings)) },
         bottomBar = {
             BottomBar(
                 pointsSelected = false,
@@ -82,14 +84,6 @@ fun ConfiguracoesScreen(
                 .padding(padding)
                 .padding(16.dp)
         ) {
-
-            Text(
-                text = stringResource(R.string.settings),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = stringResource(R.string.map_preferences),
