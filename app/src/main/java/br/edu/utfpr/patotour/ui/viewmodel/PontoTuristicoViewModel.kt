@@ -25,4 +25,10 @@ class PontoTuristicoViewModel(
             repository.salvar(ponto)
         }
     }
+
+    fun excluir(ponto: PontoTuristico) {
+        viewModelScope.launch {
+            repository.excluir(ponto)
+        }
+    }
 }

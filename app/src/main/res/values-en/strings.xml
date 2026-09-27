@@ -62,4 +62,9 @@
     <string name="map_points_list">Points on map</string>
     <string name="use_current_location">Use my current location</string>
     <string name="enable_location">Enable location</string>
+    <string name="view_details">View details</string>
+    <string name="delete">Delete</string>
+    <string name="delete_point_title">Delete tourist point</string>
+    <string name="delete_point_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
+    <string name="close">Close</string>
 </resources>

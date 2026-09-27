@@ -65,13 +65,15 @@
              Screen.FORM -> PointFormScreen(
                  initial = editing,
                  onBack = { screen = Screen.LIST },
-                 onSave = { point -> viewModel.salvar(point); screen = Screen.LIST }
+                 onSave = { point -> viewModel.salvar(point); screen = Screen.LIST },
+                 onDelete = { point -> viewModel.excluir(point); screen = Screen.LIST }
              )
              Screen.MAP -> MapScreen(
                  points = points,
                  focusPoint = mapFocus,
-                 onBack = { screen = Screen.LIST },
-                 onNavigate = { screen = it.toScreen() }
+                 onNavigate = { screen = it.toScreen() },
+                 onAddPoint = { editing = null; screen = Screen.FORM },
+                 onOpenDetails = { editing = it; screen = Screen.FORM }
              )
              Screen.SETTINGS -> ConfiguracoesScreen(
                  onPointsClick = { screen = Screen.LIST },

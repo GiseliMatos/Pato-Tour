@@ -18,7 +18,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -54,6 +56,7 @@ import br.edu.utfpr.patotour.ui.components.TopBar
 import br.edu.utfpr.patotour.ui.components.LocationPickerDialog
 import br.edu.utfpr.patotour.ui.components.TouristPointImage
 import br.edu.utfpr.patotour.util.createCameraUri
+import br.edu.utfpr.patotour.util.salvarImagemLocal
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -61,7 +64,8 @@ import java.util.Locale
 fun PointFormScreen(
     initial: PontoTuristico?,
     onBack: () -> Unit,
-    onSave: (PontoTuristico) -> Unit
+    onSave: (PontoTuristico) -> Unit,
+    onDelete: (PontoTuristico) -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -77,13 +81,14 @@ fun PointFormScreen(
     var message by remember { mutableStateOf<String?>(null) }
     var addressLoading by remember { mutableStateOf(false) }
     var locationPickerOpen by remember { mutableStateOf(false) }
+    var deleteConfirmOpen by remember { mutableStateOf(false) }
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) imageUri = uri.toString()
+        if (uri != null) scope.launch { imageUri = salvarImagemLocal(context, uri) ?: uri.toString() }
     }
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { captured ->
-        if (captured) imageUri = cameraUri?.toString().orEmpty()
+        if (captured) cameraUri?.let { uri -> scope.launch { imageUri = salvarImagemLocal(context, uri) ?: uri.toString() } }
     }
     val requestCamera = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
@@ -119,7 +124,15 @@ fun PointFormScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onBack) { Text(stringResource(R.string.cancel)) }
+                    Row {
+                        if (initial != null) {
+                            TextButton(
+                                onClick = { deleteConfirmOpen = true },
+                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                            ) { Text(stringResource(R.string.delete)) }
+                        }
+                        TextButton(onClick = onBack) { Text(stringResource(R.string.cancel)) }
+                    }
                     Button(onClick = {
                         val lat = latitude.toDoubleOrNull()
                         val lon = longitude.toDoubleOrNull()
@@ -219,6 +232,23 @@ fun PointFormScreen(
             }
         )
     }
+
+    if (deleteConfirmOpen && initial != null) {
+        AlertDialog(
+            onDismissRequest = { deleteConfirmOpen = false },
+            title = { Text(stringResource(R.string.delete_point_title)) },
+            text = { Text(stringResource(R.string.delete_point_message, initial.nome)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleteConfirmOpen = false
+                    onDelete(initial)
+                }) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteConfirmOpen = false }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
 }
 
 @Composable
@@ -268,4 +298,3 @@ private fun PhotoPicker(uri: String, onClick: () -> Unit) {
         }
     }
 }
-
