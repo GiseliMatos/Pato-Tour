@@ -13,6 +13,7 @@ val secretsProperties = Properties().apply {
         secretsFile.inputStream().use { load(it) }
     }
 }
+val mapsApiKey = secretsProperties.getProperty("MAPS_API_KEY") ?: "DEFAULT_API_KEY"
 
 android {
     namespace = "br.edu.utfpr.patotour"
@@ -26,8 +27,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        manifestPlaceholders["MAPS_API_KEY"] =
-            secretsProperties.getProperty("MAPS_API_KEY") ?: "DEFAULT_API_KEY"
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
     }
 
     buildTypes {
@@ -45,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
