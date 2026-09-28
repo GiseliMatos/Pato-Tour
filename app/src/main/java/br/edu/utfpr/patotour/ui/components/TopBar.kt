@@ -3,11 +3,14 @@ package br.edu.utfpr.patotour.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -21,30 +24,23 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun TopBar(title: String, back: (() -> Unit)? = null) {
-    Surface(shadowElevation = 2.dp, color = MaterialTheme.colorScheme.surfaceContainerLowest) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars),
+        shadowElevation = 2.dp,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest
+    ) {
         Row(
-            Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 16.dp),
+            Modifier.fillMaxWidth().height(72.dp).padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (back != null) {
-                Text(
-                    "‹",
-                    fontSize = 40.sp,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(40.dp).clickable { back() }
-                )
-            } else {
-                Spacer(Modifier.width(40.dp))
-            }
             Text(
                 title,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.width(40.dp))
         }
     }
 }
