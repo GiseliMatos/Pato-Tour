@@ -67,4 +67,6 @@
     <string name="delete_point_title">Delete tourist point</string>
     <string name="delete_point_message">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
     <string name="close">Close</string>
+    <string name="invalid_latitude">Inválido (-90 a 90)</string>
+    <string name="invalid_longitude">Inválido (-180 a 180)</string>
 </resources>
