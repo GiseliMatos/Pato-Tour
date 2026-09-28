@@ -59,6 +59,7 @@ import br.edu.utfpr.patotour.ui.components.LocationPickerDialog
 import br.edu.utfpr.patotour.ui.components.TouristPointImage
 import br.edu.utfpr.patotour.util.createCameraUri
 import br.edu.utfpr.patotour.util.salvarImagemLocal
+import br.edu.utfpr.patotour.util.toCleanDoubleOrNull
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -136,8 +137,8 @@ fun PointFormScreen(
                         TextButton(onClick = onBack) { Text(stringResource(R.string.cancel)) }
                     }
                     Button(onClick = {
-                        val lat = latitude.toDoubleOrNull()
-                        val lon = longitude.toDoubleOrNull()
+                        val lat = latitude.toCleanDoubleOrNull()
+                        val lon = longitude.toCleanDoubleOrNull()
                         if (name.isBlank() || lat == null || lon == null) {
                             message = context.getString(R.string.required_fields)
                         } else {
@@ -203,7 +204,7 @@ fun PointFormScreen(
                         Text(stringResource(R.string.select_on_map))
                     }
                     OutlinedButton(onClick = {
-                        requestAddress(latitude.toDoubleOrNull(), longitude.toDoubleOrNull())
+                        requestAddress(latitude.toCleanDoubleOrNull(), longitude.toCleanDoubleOrNull())
                     }, Modifier.fillMaxWidth(), enabled = !addressLoading) {
                         if (addressLoading) CircularProgressIndicator(Modifier.height(18.dp), strokeWidth = 2.dp)
                         else Text(stringResource(R.string.get_address))
@@ -223,8 +224,8 @@ fun PointFormScreen(
 
     if (locationPickerOpen) {
         LocationPickerDialog(
-            initialLatitude = latitude.toDoubleOrNull(),
-            initialLongitude = longitude.toDoubleOrNull(),
+            initialLatitude = latitude.toCleanDoubleOrNull(),
+            initialLongitude = longitude.toCleanDoubleOrNull(),
             onDismiss = { locationPickerOpen = false },
             onConfirm = { selectedLatitude, selectedLongitude ->
                 latitude = String.format(Locale.US, "%.6f", selectedLatitude)
