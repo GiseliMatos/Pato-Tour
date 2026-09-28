@@ -41,8 +41,8 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 import kotlinx.coroutines.launch
 
 @Composable
@@ -100,7 +100,7 @@ fun LocationPickerDialog(
                     onMapClick = { selectedPosition = it }
                 ) {
                     Marker(
-                        state = MarkerState(position = selectedPosition),
+                        state = rememberMarkerState(position = selectedPosition),
                         title = stringResource(R.string.selected_location)
                     )
                 }
