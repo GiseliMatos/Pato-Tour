@@ -1,6 +1,9 @@
 package br.edu.utfpr.patotour.ui.screens
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,6 +14,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,6 +30,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -37,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -52,6 +60,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import androidx.compose.ui.focus.onFocusChanged
+import android.content.res.Configuration
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AddAPhoto
+import androidx.compose.material.icons.outlined.MyLocation
+import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.Place
 import br.edu.utfpr.patotour.R
 import br.edu.utfpr.patotour.data.model.PontoTuristico
 import br.edu.utfpr.patotour.service.GeocodingService
@@ -61,6 +75,9 @@ import br.edu.utfpr.patotour.ui.components.TouristPointImage
 import br.edu.utfpr.patotour.util.createCameraUri
 import br.edu.utfpr.patotour.util.salvarImagemLocal
 import br.edu.utfpr.patotour.util.toCleanDoubleOrNull
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -73,19 +90,22 @@ fun PointFormScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    val geocodingService = remember { GeocodingService(context) }
+    val geocodingService = remember(context) { GeocodingService(context.applicationContext) }
 
-    var name by remember { mutableStateOf(initial?.nome ?: "") }
-    var description by remember { mutableStateOf(initial?.descricao ?: "") }
-    var latitude by remember { mutableStateOf(initial?.latitude?.toString() ?: "") }
-    var longitude by remember { mutableStateOf(initial?.longitude?.toString() ?: "") }
-    var address by remember { mutableStateOf(initial?.enderecoTextual ?: "") }
-    var imageUri by remember { mutableStateOf(initial?.caminhoImagem ?: "") }
-    var message by remember { mutableStateOf<String?>(null) }
-    var addressLoading by remember { mutableStateOf(false) }
-    var locationPickerOpen by remember { mutableStateOf(false) }
-    var deleteConfirmOpen by remember { mutableStateOf(false) }
+    // A rotação recria a Activity; estes campos precisam sobreviver a esse ciclo.
+    var name by rememberSaveable(initial?.id) { mutableStateOf(initial?.nome ?: "") }
+    var description by rememberSaveable(initial?.id) { mutableStateOf(initial?.descricao ?: "") }
+    var latitude by rememberSaveable(initial?.id) { mutableStateOf(initial?.latitude?.toString() ?: "") }
+    var longitude by rememberSaveable(initial?.id) { mutableStateOf(initial?.longitude?.toString() ?: "") }
+    var address by rememberSaveable(initial?.id) { mutableStateOf(initial?.enderecoTextual ?: "") }
+    var imageUri by rememberSaveable(initial?.id) { mutableStateOf(initial?.caminhoImagem ?: "") }
+    var message by rememberSaveable { mutableStateOf<String?>(null) }
+    var addressLoading by rememberSaveable { mutableStateOf(false) }
+    var locationPickerOpen by rememberSaveable { mutableStateOf(false) }
+    var deleteConfirmOpen by rememberSaveable { mutableStateOf(false) }
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     var latTouched by remember { mutableStateOf(false) }
     var lonTouched by remember { mutableStateOf(false) }
@@ -128,6 +148,50 @@ fun PointFormScreen(
             address = geocodingService.buscarEnderecoPorCoordenadas(lat, lon)
                 ?: context.getString(R.string.address_unavailable)
             addressLoading = false
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun useCurrentLocationForAddress() {
+        if (!hasLocationPermission(context)) return
+        addressLoading = true
+        message = null
+        fun applyLocation(location: android.location.Location?) {
+            if (location == null) {
+                addressLoading = false
+                message = context.getString(R.string.location_unavailable)
+                return
+            }
+            latitude = String.format(Locale.US, "%.6f", location.latitude)
+            longitude = String.format(Locale.US, "%.6f", location.longitude)
+            requestAddress(location.latitude, location.longitude)
+        }
+        fusedLocationClient
+            .getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, CancellationTokenSource().token)
+            .addOnSuccessListener { location ->
+                if (location != null) applyLocation(location)
+                else fusedLocationClient.lastLocation.addOnSuccessListener(::applyLocation)
+            }
+            .addOnFailureListener { applyLocation(null) }
+    }
+
+    val requestLocation = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.values.any { it }) useCurrentLocationForAddress()
+        else message = context.getString(R.string.location_permission_required)
+    }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) scope.launch { imageUri = salvarImagemLocal(context, uri) ?: uri.toString() }
+    }
+    var cameraUri by remember { mutableStateOf<Uri?>(null) }
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { captured ->
+        if (captured) cameraUri?.let { uri -> scope.launch { imageUri = salvarImagemLocal(context, uri) ?: uri.toString() } }
+    }
+    val requestCamera = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            cameraUri = createCameraUri(context)
+            cameraUri?.let(camera::launch)
         }
     }
 
@@ -182,8 +246,13 @@ fun PointFormScreen(
         }
     ) { padding ->
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .consumeWindowInsets(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text(
                 if (initial == null) stringResource(R.string.new_point_title) else stringResource(R.string.edit_point_title),
@@ -193,24 +262,41 @@ fun PointFormScreen(
             )
             Text(stringResource(R.string.form_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-            PhotoPicker(imageUri) { picker.launch("image/*") }
-            OutlinedButton(onClick = {
-                if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                    cameraUri = createCameraUri(context)
-                    cameraUri?.let(camera::launch)
-                } else {
-                    requestCamera.launch(Manifest.permission.CAMERA)
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+            ) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    PhotoPicker(imageUri) { picker.launch("image/*") }
+                    OutlinedButton(onClick = {
+                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            cameraUri = createCameraUri(context)
+                            cameraUri?.let(camera::launch)
+                        } else {
+                            requestCamera.launch(Manifest.permission.CAMERA)
+                        }
+                    }, Modifier.fillMaxWidth()) {
+                        Icon(Icons.Outlined.PhotoCamera, contentDescription = null)
+                        Spacer(Modifier.padding(4.dp))
+                        Text(stringResource(R.string.take_photo))
+                    }
                 }
-            }, Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.take_photo))
             }
 
-            FormField(stringResource(R.string.point_name), name, { name = it }, stringResource(R.string.point_name_hint))
-            FormField(stringResource(R.string.description), description, { description = it }, stringResource(R.string.description_hint), singleLine = false)
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Text(stringResource(R.string.place_details), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    FormField(stringResource(R.string.point_name), name, { name = it }, stringResource(R.string.point_name_hint))
+                    FormField(stringResource(R.string.description), description, { description = it }, stringResource(R.string.description_hint), singleLine = false)
+                }
+            }
 
             Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-                shape = RoundedCornerShape(14.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
@@ -250,7 +336,18 @@ fun PointFormScreen(
                             }
                         )
                     }
-                    OutlinedButton(onClick = { locationPickerOpen = true }, Modifier.fillMaxWidth()) {
+                    if (isLandscape) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            FormField(stringResource(R.string.latitude), latitude, { latitude = it }, stringResource(R.string.latitude_hint), Modifier.weight(1f), true)
+                            FormField(stringResource(R.string.longitude), longitude, { longitude = it }, stringResource(R.string.longitude_hint), Modifier.weight(1f), true)
+                        }
+                    } else {
+                        FormField(stringResource(R.string.latitude), latitude, { latitude = it }, stringResource(R.string.latitude_hint), number = true)
+                        FormField(stringResource(R.string.longitude), longitude, { longitude = it }, stringResource(R.string.longitude_hint), number = true)
+                    }
+                    Button(onClick = { locationPickerOpen = true }, Modifier.fillMaxWidth()) {
+                        Icon(Icons.Outlined.MyLocation, contentDescription = null)
+                        Spacer(Modifier.padding(4.dp))
                         Text(stringResource(R.string.select_on_map))
                     }
                     OutlinedButton(onClick = {
@@ -261,6 +358,11 @@ fun PointFormScreen(
                         if (addressLoading) CircularProgressIndicator(Modifier.height(18.dp), strokeWidth = 2.dp)
                         else Text(stringResource(R.string.get_address))
                     }
+                    Text(
+                        stringResource(R.string.address_current_location_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     FormField(
                         stringResource(R.string.address),
                         address,
@@ -322,7 +424,7 @@ private fun FormField(
     onFocusChanged: ((Boolean) -> Unit)? = null
 ) {
     Column(modifier) {
-        Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+        Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -341,7 +443,7 @@ private fun FormField(
                 }
             },
             keyboardOptions = KeyboardOptions(keyboardType = if (number) KeyboardType.Decimal else KeyboardType.Text),
-            shape = RoundedCornerShape(10.dp)
+            shape = RoundedCornerShape(14.dp)
         )
     }
 }
@@ -351,15 +453,15 @@ private fun PhotoPicker(uri: String, onClick: () -> Unit) {
     Box(
         Modifier
             .fillMaxWidth()
-            .height(190.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .height(180.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         if (uri.isBlank()) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("+", fontSize = 44.sp, color = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Outlined.AddAPhoto, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.height(42.dp))
                 Text(stringResource(R.string.upload_photo), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.photo_hint), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
             }
@@ -368,3 +470,7 @@ private fun PhotoPicker(uri: String, onClick: () -> Unit) {
         }
     }
 }
+
+private fun hasLocationPermission(context: Context): Boolean =
+    ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED

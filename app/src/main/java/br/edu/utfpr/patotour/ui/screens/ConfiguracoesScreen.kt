@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -16,12 +20,14 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,9 +38,11 @@ import androidx.compose.ui.unit.dp
 import br.edu.utfpr.patotour.R
 import br.edu.utfpr.patotour.preferences.ConfiguracoesPreferences
 import br.edu.utfpr.patotour.storage.Armazenamento
+import br.edu.utfpr.patotour.storage.CacheDoMapa
 import br.edu.utfpr.patotour.ui.components.BottomBar
 import br.edu.utfpr.patotour.ui.components.TopBar
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -59,6 +67,7 @@ fun ConfiguracoesScreen(
         val configuracoesPreferences = remember {
             ConfiguracoesPreferences(context)
         }
+        val scope = rememberCoroutineScope()
 
         var zoomPadrao by remember {
             mutableFloatStateOf(configuracoesPreferences.obterZoom())
@@ -71,6 +80,8 @@ fun ConfiguracoesScreen(
         var tamanhoArmazenamento by remember {
             mutableStateOf("")
         }
+        var confirmarLimpezaCache by remember { mutableStateOf(false) }
+        var mensagemCache by remember { mutableStateOf<String?>(null) }
 
         LaunchedEffect(Unit) {
             tamanhoArmazenamento = withContext(Dispatchers.IO) {
@@ -82,6 +93,7 @@ fun ConfiguracoesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
 
@@ -95,6 +107,7 @@ fun ConfiguracoesScreen(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
@@ -207,6 +220,7 @@ fun ConfiguracoesScreen(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
@@ -243,8 +257,55 @@ fun ConfiguracoesScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedButton(
+                        onClick = { confirmarLimpezaCache = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.clear_map_cache))
+                    }
+
+                    mensagemCache?.let {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
+        }
+
+        if (confirmarLimpezaCache) {
+            AlertDialog(
+                onDismissRequest = { confirmarLimpezaCache = false },
+                title = { Text(stringResource(R.string.clear_map_cache)) },
+                text = { Text(stringResource(R.string.clear_map_cache_message)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        confirmarLimpezaCache = false
+                        scope.launch {
+                            val cacheLimpo = withContext(Dispatchers.IO) {
+                                CacheDoMapa.limpar(context)
+                            }
+                            mensagemCache = context.getString(
+                                if (cacheLimpo) R.string.map_cache_cleared else R.string.map_cache_clear_error
+                            )
+                            tamanhoArmazenamento = withContext(Dispatchers.IO) {
+                                Armazenamento.obterTamanhoUtilizado(context)
+                            }
+                        }
+                    }) { Text(stringResource(R.string.clear)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmarLimpezaCache = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
         }
     }
 }

@@ -3,6 +3,8 @@
  import android.os.Bundle
  import androidx.activity.ComponentActivity
  import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
  import androidx.activity.compose.setContent
  import androidx.activity.enableEdgeToEdge
  import androidx.compose.foundation.layout.fillMaxSize
@@ -50,31 +52,42 @@
          factory = viewModelFactory { initializer { PontoTuristicoViewModel(repository) } }
      )
      val points by viewModel.points.collectAsState()
-     var screen by rememberSaveable { mutableStateOf(Screen.LIST) }
-     var editing by remember { mutableStateOf<PontoTuristico?>(null) }
-     var mapFocus by remember { mutableStateOf<PontoTuristico?>(null) }
- 
-     Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
-         when (screen) {
-             Screen.LIST -> PointsScreen(
-                 points = points,
-                 onAdd = { editing = null; screen = Screen.FORM },
-                 onEdit = { editing = it; screen = Screen.FORM },
+    var screen by rememberSaveable { mutableStateOf(Screen.LIST) }
+    var formReturnScreen by rememberSaveable { mutableStateOf(Screen.LIST) }
+    var editing by remember { mutableStateOf<PontoTuristico?>(null) }
+    var mapFocus by remember { mutableStateOf<PontoTuristico?>(null) }
+
+    fun openForm(point: PontoTuristico?, returnScreen: Screen) {
+        editing = point
+        formReturnScreen = returnScreen
+        screen = Screen.FORM
+    }
+
+    BackHandler(enabled = screen != Screen.LIST) {
+        screen = if (screen == Screen.FORM) formReturnScreen else Screen.LIST
+    }
+
+    Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
+        when (screen) {
+            Screen.LIST -> PointsScreen(
+                points = points,
+                onAdd = { openForm(null, Screen.LIST) },
+                onEdit = { openForm(it, Screen.LIST) },
                  onNavigate = { screen = it.toScreen() },
                  onViewOnMap = { point -> mapFocus = point; screen = Screen.MAP }
              )
-             Screen.FORM -> PointFormScreen(
-                 initial = editing,
-                 onBack = { screen = Screen.LIST },
-                 onSave = { point -> viewModel.salvar(point); screen = Screen.LIST },
-                 onDelete = { point -> viewModel.excluir(point); screen = Screen.LIST }
+            Screen.FORM -> PointFormScreen(
+                initial = editing,
+                onBack = { screen = formReturnScreen },
+                onSave = { point -> viewModel.salvar(point); screen = formReturnScreen },
+                onDelete = { point -> viewModel.excluir(point); screen = formReturnScreen }
              )
              Screen.MAP -> MapScreen(
                  points = points,
-                 focusPoint = mapFocus,
-                 onNavigate = { screen = it.toScreen() },
-                 onAddPoint = { editing = null; screen = Screen.FORM },
-                 onOpenDetails = { editing = it; screen = Screen.FORM }
+                focusPoint = mapFocus,
+                onNavigate = { screen = it.toScreen() },
+                onAddPoint = { openForm(null, Screen.MAP) },
+                onOpenDetails = { openForm(it, Screen.MAP) }
              )
              Screen.SETTINGS -> ConfiguracoesScreen(
                  onPointsClick = { screen = Screen.LIST },

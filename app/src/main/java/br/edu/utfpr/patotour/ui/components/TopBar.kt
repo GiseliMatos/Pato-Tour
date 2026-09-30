@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 
 @Composable
 fun TopBar(title: String, back: (() -> Unit)? = null) {
@@ -33,6 +37,13 @@ fun TopBar(title: String, back: (() -> Unit)? = null) {
             Modifier.fillMaxWidth().height(72.dp).padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (back != null) {
+                IconButton(onClick = back) {
+                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Voltar")
+                }
+            } else {
+                Spacer(Modifier.width(48.dp))
+            }
             Text(
                 title,
                 style = MaterialTheme.typography.titleLarge,
@@ -41,6 +52,7 @@ fun TopBar(title: String, back: (() -> Unit)? = null) {
                 modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
                 textAlign = TextAlign.Center
             )
+            Spacer(Modifier.width(48.dp))
         }
     }
 }

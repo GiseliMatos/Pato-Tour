@@ -29,7 +29,7 @@ fun PointCard(point: PontoTuristico, onEdit: () -> Unit, onViewOnMap: () -> Unit
     Card(
         Modifier.fillMaxWidth().clickable { onEdit() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-        shape = RoundedCornerShape(14.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column {
             TouristPointImage(point.caminhoImagem, Modifier.fillMaxWidth().height(210.dp), point.nome)

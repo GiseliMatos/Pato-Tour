@@ -15,6 +15,7 @@
     <string name="point_name_hint">Ex.: Cachoeira escondida</string>
     <string name="description">Descrição</string>
     <string name="description_hint">Descreva o acesso e as características do local...</string>
+    <string name="place_details">Sobre o local</string>
     <string name="location_coordinates">Coordenadas do local</string>
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
@@ -33,7 +34,10 @@
     <string name="get_address">Obter endereço</string>
     <string name="address_unavailable">Endereço indisponível off-line</string>
     <string name="coordinates_required">Informe latitude e longitude válidas.</string>
-    <string name="required_fields">Preencha nome, latitude e longitude.</string>
+    <string name="location_unavailable">Não foi possível obter sua localização atual.</string>
+    <string name="location_permission_required">Permita o acesso à localização para preencher o endereço automaticamente.</string>
+    <string name="address_current_location_hint">Sem coordenadas? Usaremos sua localização atual.</string>
+    <string name="required_fields">Preencha nome, descrição, foto, latitude e longitude.</string>
     <string name="upload_photo">Adicionar foto do ponto</string>
     <string name="photo_hint">Imagens de boa qualidade são recomendadas</string>
     <string name="take_photo">Tirar foto com a câmera</string>
@@ -55,6 +59,11 @@
     <string name="local_storage">Armazenamento local</string>
     <string name="storage_used">Espaço utilizado: %1$s</string>
     <string name="storage_description">Inclui dados e preferências armazenados localmente pelo aplicativo.</string>
+    <string name="clear_map_cache">Limpar cache do mapa</string>
+    <string name="clear_map_cache_message">Os arquivos temporários do mapa serão removidos. Seus pontos, fotos e preferências serão mantidos.</string>
+    <string name="map_cache_cleared">Cache do mapa limpo.</string>
+    <string name="map_cache_clear_error">Não foi possível limpar todo o cache do mapa.</string>
+    <string name="clear">Limpar</string>
     <string name="calculating">Calculando...</string>
     <string name="map_title">Mapa dos pontos</string>
     <string name="map_type_value">Tipo de mapa: %1$s</string>
