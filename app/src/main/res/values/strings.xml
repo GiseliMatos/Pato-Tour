@@ -76,4 +76,6 @@
     <string name="delete_point_title">Excluir ponto turístico</string>
     <string name="delete_point_message">Tem certeza que deseja excluir \"%1$s\"? Essa ação não pode ser desfeita.</string>
     <string name="close">Fechar</string>
+    <string name="invalid_latitude">Invalid (-90 a 90)</string>
+    <string name="invalid_longitude">Invalid (-180 a 180)</string>
 </resources>

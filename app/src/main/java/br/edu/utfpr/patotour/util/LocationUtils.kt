@@ -8,6 +8,10 @@ import android.provider.MediaStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+fun String.toCleanDoubleOrNull(): Double? {
+    return this.trim().replace(',', '.').toDoubleOrNull()
+}
+
 fun createCameraUri(context: Context): Uri? = runCatching {
     val values = ContentValues().apply {
         put(MediaStore.Images.Media.DISPLAY_NAME, "pato_tour_${System.currentTimeMillis()}.jpg")

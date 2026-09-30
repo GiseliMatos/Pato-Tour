@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
@@ -56,6 +58,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+import androidx.compose.ui.focus.onFocusChanged
 import android.content.res.Configuration
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddAPhoto
@@ -70,6 +74,7 @@ import br.edu.utfpr.patotour.ui.components.LocationPickerDialog
 import br.edu.utfpr.patotour.ui.components.TouristPointImage
 import br.edu.utfpr.patotour.util.createCameraUri
 import br.edu.utfpr.patotour.util.salvarImagemLocal
+import br.edu.utfpr.patotour.util.toCleanDoubleOrNull
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -102,6 +107,36 @@ fun PointFormScreen(
     var deleteConfirmOpen by rememberSaveable { mutableStateOf(false) }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
+    var latTouched by remember { mutableStateOf(false) }
+    var lonTouched by remember { mutableStateOf(false) }
+
+    val typingStates = listOf("-", ".", ",", "-.", "-,")
+
+    val latDouble = latitude.toCleanDoubleOrNull()
+    val isLatValid = when {
+        latTouched -> latDouble != null && latDouble in -90.0..90.0
+        else -> latitude.isBlank() || latitude.trim() in typingStates || (latDouble?.let { it in -90.0..90.0 } ?: false)
+    }
+
+    val lonDouble = longitude.toCleanDoubleOrNull()
+    val isLonValid = when {
+        lonTouched -> lonDouble != null && lonDouble in -180.0..180.0
+        else -> longitude.isBlank() || longitude.trim() in typingStates || (lonDouble?.let { it in -180.0..180.0 } ?: false)
+    }
+
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) scope.launch { imageUri = salvarImagemLocal(context, uri) ?: uri.toString() }
+    }
+    var cameraUri by remember { mutableStateOf<Uri?>(null) }
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { captured ->
+        if (captured) cameraUri?.let { uri -> scope.launch { imageUri = salvarImagemLocal(context, uri) ?: uri.toString() } }
+    }
+    val requestCamera = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            cameraUri = createCameraUri(context)
+            cameraUri?.let(camera::launch)
+        }
+    }
     fun requestAddress(lat: Double?, lon: Double?) {
         if (lat == null || lon == null || lat !in -90.0..90.0 || lon !in -180.0..180.0) {
             message = context.getString(R.string.coordinates_required)
@@ -184,9 +219,13 @@ fun PointFormScreen(
                         TextButton(onClick = onBack) { Text(stringResource(R.string.cancel)) }
                     }
                     Button(onClick = {
-                        val lat = latitude.toDoubleOrNull()
-                        val lon = longitude.toDoubleOrNull()
-                        if (name.isBlank() || description.isBlank() || lat == null || lon == null || imageUri.isBlank()) {
+                        latTouched = true
+                        lonTouched = true
+
+                        val lat = latitude.toCleanDoubleOrNull()
+                        val lon = longitude.toCleanDoubleOrNull()
+
+                        if (name.isBlank() || lat == null || lon == null || !isLatValid || !isLonValid) {
                             message = context.getString(R.string.required_fields)
                         } else {
                             onSave(
@@ -260,10 +299,42 @@ fun PointFormScreen(
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.Place, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-                        Spacer(Modifier.padding(4.dp))
-                        Text(stringResource(R.string.location_coordinates), fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.location_coordinates),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        FormField(
+                            label = stringResource(R.string.latitude),
+                            value = latitude,
+                            onValueChange = { latitude = it },
+                            hint = stringResource(R.string.latitude_hint),
+                            modifier = Modifier.weight(1f),
+                            number = true,
+                            isError = !isLatValid,
+                            errorMessage = if (!isLatValid) "Inválido (-90 a 90)" else null,
+                            onFocusChanged = { isFocused ->
+                                if (!isFocused && latitude.isNotEmpty()) {
+                                    latTouched = true
+                                }
+                            }
+                        )
+                        FormField(
+                            label = stringResource(R.string.longitude),
+                            value = longitude,
+                            onValueChange = { longitude = it },
+                            hint = stringResource(R.string.longitude_hint),
+                            modifier = Modifier.weight(1f),
+                            number = true,
+                            isError = !isLonValid,
+                            errorMessage = if (!isLonValid) "Inválido (-180 a 180)" else null,
+                            onFocusChanged = { isFocused ->
+                                if (!isFocused && longitude.isNotEmpty()) {
+                                    lonTouched = true
+                                }
+                            }
+                        )
                     }
                     if (isLandscape) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -280,17 +351,9 @@ fun PointFormScreen(
                         Text(stringResource(R.string.select_on_map))
                     }
                     OutlinedButton(onClick = {
-                        val lat = latitude.toDoubleOrNull()
-                        val lon = longitude.toDoubleOrNull()
-                        if (lat != null && lon != null) {
-                            requestAddress(lat, lon)
-                        } else if (hasLocationPermission(context)) {
-                            useCurrentLocationForAddress()
-                        } else {
-                            requestLocation.launch(
-                                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-                            )
-                        }
+                        latTouched = true
+                        lonTouched = true
+                        requestAddress(latitude.toCleanDoubleOrNull(), longitude.toCleanDoubleOrNull())
                     }, Modifier.fillMaxWidth(), enabled = !addressLoading) {
                         if (addressLoading) CircularProgressIndicator(Modifier.height(18.dp), strokeWidth = 2.dp)
                         else Text(stringResource(R.string.get_address))
@@ -315,12 +378,14 @@ fun PointFormScreen(
 
     if (locationPickerOpen) {
         LocationPickerDialog(
-            initialLatitude = latitude.toDoubleOrNull(),
-            initialLongitude = longitude.toDoubleOrNull(),
+            initialLatitude = latitude.toCleanDoubleOrNull(),
+            initialLongitude = longitude.toCleanDoubleOrNull(),
             onDismiss = { locationPickerOpen = false },
             onConfirm = { selectedLatitude, selectedLongitude ->
                 latitude = String.format(Locale.US, "%.6f", selectedLatitude)
                 longitude = String.format(Locale.US, "%.6f", selectedLongitude)
+                latTouched = true
+                lonTouched = true
                 locationPickerOpen = false
                 requestAddress(selectedLatitude, selectedLongitude)
             }
@@ -353,17 +418,30 @@ private fun FormField(
     hint: String,
     modifier: Modifier = Modifier,
     number: Boolean = false,
-    singleLine: Boolean = true
+    singleLine: Boolean = true,
+    isError: Boolean = false,
+    errorMessage: String? = null,
+    onFocusChanged: ((Boolean) -> Unit)? = null
 ) {
     Column(modifier) {
         Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
         OutlinedTextField(
-            value,
-            onValueChange,
-            Modifier.fillMaxWidth(),
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { focusState ->
+                    onFocusChanged?.invoke(focusState.isFocused)
+                },
             placeholder = { Text(hint) },
             singleLine = singleLine,
             minLines = if (singleLine) 1 else 3,
+            isError = isError,
+            supportingText = {
+                if (isError && errorMessage != null) {
+                    Text(errorMessage, color = MaterialTheme.colorScheme.error)
+                }
+            },
             keyboardOptions = KeyboardOptions(keyboardType = if (number) KeyboardType.Decimal else KeyboardType.Text),
             shape = RoundedCornerShape(14.dp)
         )
