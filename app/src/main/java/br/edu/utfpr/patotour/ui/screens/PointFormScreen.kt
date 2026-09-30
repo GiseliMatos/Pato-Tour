@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -86,7 +87,7 @@ fun PointFormScreen(
     val scope = rememberCoroutineScope()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    val geocodingService = remember { GeocodingService() }
+    val geocodingService = remember(context) { GeocodingService(context.applicationContext) }
 
     // A rotação recria a Activity; estes campos precisam sobreviver a esse ciclo.
     var name by rememberSaveable(initial?.id) { mutableStateOf(initial?.nome ?: "") }
@@ -206,7 +207,12 @@ fun PointFormScreen(
         }
     ) { padding ->
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(20.dp),
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .consumeWindowInsets(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text(
