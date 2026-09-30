@@ -1,7 +1,6 @@
  package br.edu.utfpr.patotour
  
  import android.os.Bundle
-import androidx.activity.compose.rememberLauncherForActivityResult
  import androidx.activity.compose.BackHandler
  import androidx.activity.compose.setContent
  import androidx.activity.enableEdgeToEdge
@@ -13,7 +12,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
  import androidx.compose.runtime.collectAsState
  import androidx.compose.runtime.getValue
  import androidx.compose.runtime.mutableStateOf
- import androidx.compose.runtime.remember
  import androidx.compose.runtime.saveable.rememberSaveable
  import androidx.compose.runtime.setValue
  import androidx.compose.ui.Modifier
@@ -53,8 +51,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
      val points by viewModel.points.collectAsState()
     var screen by rememberSaveable { mutableStateOf(Screen.LIST) }
     var formReturnScreen by rememberSaveable { mutableStateOf(Screen.LIST) }
-    var editing by remember { mutableStateOf<PontoTuristico?>(null) }
-    var mapFocus by remember { mutableStateOf<PontoTuristico?>(null) }
+    var editing by rememberSaveable { mutableStateOf<PontoTuristico?>(null) }
+    var mapFocus by rememberSaveable { mutableStateOf<PontoTuristico?>(null) }
 
     fun openForm(point: PontoTuristico?, returnScreen: Screen) {
         editing = point

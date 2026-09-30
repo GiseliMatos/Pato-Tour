@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,10 +63,10 @@ fun MapScreen(
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val scope = rememberCoroutineScope()
 
-    var query by remember { mutableStateOf("") }
-    var selected by remember { mutableStateOf(focusPoint) }
-    var detalhesAbertos by remember { mutableStateOf<PontoTuristico?>(null) }
-    var hasLocationPermission by remember { mutableStateOf(hasAnyLocationPermission(context)) }
+    var query by rememberSaveable { mutableStateOf("") }
+    var selected by rememberSaveable { mutableStateOf(focusPoint) }
+    var detalhesAbertos by rememberSaveable { mutableStateOf<PontoTuristico?>(null) }
+    var hasLocationPermission by rememberSaveable { mutableStateOf(hasAnyLocationPermission(context)) }
     val requestLocation = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) {
@@ -84,6 +85,7 @@ fun MapScreen(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(initialTarget, zoom)
     }
+    var cameraInitialized by rememberSaveable { mutableStateOf(false) }
 
     fun moverPara(ponto: PontoTuristico) {
         selected = ponto
@@ -112,10 +114,13 @@ fun MapScreen(
 
     // Se veio de "Ver no mapa", vai até o ponto. Sem foco definido, centraliza na localização atual.
     LaunchedEffect(focusPoint, hasLocationPermission) {
-        if (focusPoint != null) {
-            moverPara(focusPoint)
-        } else {
-            centerOnCurrentLocation()
+        if (!cameraInitialized) {
+            if (focusPoint != null) {
+                moverPara(focusPoint)
+            } else {
+                centerOnCurrentLocation()
+            }
+            cameraInitialized = true
         }
     }
 
