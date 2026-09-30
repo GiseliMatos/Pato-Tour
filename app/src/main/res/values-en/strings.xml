@@ -37,6 +37,8 @@
     <string name="location_permission_required">Allow location access to fill the address automatically.</string>
     <string name="address_current_location_hint">No coordinates? We will use your current location.</string>
     <string name="required_fields">Fill in name, description, photo, latitude and longitude.</string>
+    <string name="name_description_required">Enter the name and description.</string>
+    <string name="photo_required">Add a photo of the tourist point.</string>
     <string name="upload_photo">Add point photo</string>
     <string name="photo_hint">High quality images are recommended</string>
     <string name="take_photo">Take a photo</string>
@@ -54,6 +56,11 @@
     <string name="map_satellite">Satellite</string>
     <string name="map_hybrid">Hybrid</string>
     <string name="map_terrain">Terrain</string>
+    <string name="language">Language</string>
+    <string name="app_language">Application language</string>
+    <string name="language_automatic">Automatic (system)</string>
+    <string name="language_portuguese">Portuguese</string>
+    <string name="language_english">English</string>
     <string name="data">Data</string>
     <string name="local_storage">Local storage</string>
     <string name="storage_used">Storage used: %1$s</string>

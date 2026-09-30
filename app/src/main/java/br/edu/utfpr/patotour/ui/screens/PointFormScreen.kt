@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -50,7 +51,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -59,7 +59,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import androidx.compose.ui.focus.onFocusChanged
-import android.content.res.Configuration
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.material.icons.outlined.MyLocation
@@ -104,8 +103,6 @@ fun PointFormScreen(
     var addressLoading by rememberSaveable { mutableStateOf(false) }
     var locationPickerOpen by rememberSaveable { mutableStateOf(false) }
     var deleteConfirmOpen by rememberSaveable { mutableStateOf(false) }
-    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-
     var latTouched by remember { mutableStateOf(false) }
     var lonTouched by remember { mutableStateOf(false) }
 
@@ -211,8 +208,22 @@ fun PointFormScreen(
                         val lat = latitude.toCleanDoubleOrNull()
                         val lon = longitude.toCleanDoubleOrNull()
 
-                        if (name.isBlank() || lat == null || lon == null || !isLatValid || !isLonValid) {
-                            message = context.getString(R.string.required_fields)
+                        if (name.isBlank() || description.isBlank()) {
+                            message = null
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.name_description_required),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else if (imageUri.isBlank()) {
+                            message = null
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.photo_required),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else if (lat == null || lon == null || !isLatValid || !isLonValid) {
+                            message = context.getString(R.string.coordinates_required)
                         } else {
                             onSave(
                                 PontoTuristico(
@@ -322,24 +333,30 @@ fun PointFormScreen(
                             }
                         )
                     }
-                    if (isLandscape) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            FormField(stringResource(R.string.latitude), latitude, { latitude = it }, stringResource(R.string.latitude_hint), Modifier.weight(1f), true)
-                            FormField(stringResource(R.string.longitude), longitude, { longitude = it }, stringResource(R.string.longitude_hint), Modifier.weight(1f), true)
-                        }
-                    } else {
-                        FormField(stringResource(R.string.latitude), latitude, { latitude = it }, stringResource(R.string.latitude_hint), number = true)
-                        FormField(stringResource(R.string.longitude), longitude, { longitude = it }, stringResource(R.string.longitude_hint), number = true)
-                    }
                     Button(onClick = { locationPickerOpen = true }, Modifier.fillMaxWidth()) {
                         Icon(Icons.Outlined.MyLocation, contentDescription = null)
                         Spacer(Modifier.padding(4.dp))
                         Text(stringResource(R.string.select_on_map))
                     }
                     OutlinedButton(onClick = {
-                        latTouched = true
-                        lonTouched = true
-                        requestAddress(latitude.toCleanDoubleOrNull(), longitude.toCleanDoubleOrNull())
+                        if (latitude.isBlank() && longitude.isBlank()) {
+                            latTouched = false
+                            lonTouched = false
+                            if (hasLocationPermission(context)) {
+                                useCurrentLocationForAddress()
+                            } else {
+                                requestLocation.launch(
+                                    arrayOf(
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
+                                )
+                            }
+                        } else {
+                            latTouched = true
+                            lonTouched = true
+                            requestAddress(latitude.toCleanDoubleOrNull(), longitude.toCleanDoubleOrNull())
+                        }
                     }, Modifier.fillMaxWidth(), enabled = !addressLoading) {
                         if (addressLoading) CircularProgressIndicator(Modifier.height(18.dp), strokeWidth = 2.dp)
                         else Text(stringResource(R.string.get_address))

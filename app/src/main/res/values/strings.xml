@@ -38,6 +38,8 @@
     <string name="location_permission_required">Permita o acesso à localização para preencher o endereço automaticamente.</string>
     <string name="address_current_location_hint">Sem coordenadas? Usaremos sua localização atual.</string>
     <string name="required_fields">Preencha nome, descrição, foto, latitude e longitude.</string>
+    <string name="name_description_required">Preencha o nome e a descrição.</string>
+    <string name="photo_required">Adicione uma foto do ponto turístico.</string>
     <string name="upload_photo">Adicionar foto do ponto</string>
     <string name="photo_hint">Imagens de boa qualidade são recomendadas</string>
     <string name="take_photo">Tirar foto com a câmera</string>
@@ -55,6 +57,11 @@
     <string name="map_satellite">Satélite</string>
     <string name="map_hybrid">Híbrido</string>
     <string name="map_terrain">Terreno</string>
+    <string name="language">Idioma</string>
+    <string name="app_language">Idioma do aplicativo</string>
+    <string name="language_automatic">Automático (sistema)</string>
+    <string name="language_portuguese">Português</string>
+    <string name="language_english">Inglês</string>
     <string name="data">Dados</string>
     <string name="local_storage">Armazenamento local</string>
     <string name="storage_used">Espaço utilizado: %1$s</string>
