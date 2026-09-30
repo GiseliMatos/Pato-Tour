@@ -53,8 +53,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
      val points by viewModel.points.collectAsState()
     var screen by rememberSaveable { mutableStateOf(Screen.LIST) }
     var formReturnScreen by rememberSaveable { mutableStateOf(Screen.LIST) }
-    var editing by remember { mutableStateOf<PontoTuristico?>(null) }
-    var mapFocus by remember { mutableStateOf<PontoTuristico?>(null) }
+    var editing by rememberSaveable { mutableStateOf<PontoTuristico?>(null) }
+    var mapFocus by rememberSaveable { mutableStateOf<PontoTuristico?>(null) }
 
     fun openForm(point: PontoTuristico?, returnScreen: Screen) {
         editing = point
