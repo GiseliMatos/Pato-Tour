@@ -59,6 +59,11 @@
     <string name="local_storage">Armazenamento local</string>
     <string name="storage_used">Espaço utilizado: %1$s</string>
     <string name="storage_description">Inclui dados e preferências armazenados localmente pelo aplicativo.</string>
+    <string name="clear_map_cache">Limpar cache do mapa</string>
+    <string name="clear_map_cache_message">Os arquivos temporários do mapa serão removidos. Seus pontos, fotos e preferências serão mantidos.</string>
+    <string name="map_cache_cleared">Cache do mapa limpo.</string>
+    <string name="map_cache_clear_error">Não foi possível limpar todo o cache do mapa.</string>
+    <string name="clear">Limpar</string>
     <string name="calculating">Calculando...</string>
     <string name="map_title">Mapa dos pontos</string>
     <string name="map_type_value">Tipo de mapa: %1$s</string>
