@@ -3,7 +3,6 @@ package br.edu.utfpr.patotour.ui.screens
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -180,19 +179,6 @@ fun PointFormScreen(
     ) { permissions ->
         if (permissions.values.any { it }) useCurrentLocationForAddress()
         else message = context.getString(R.string.location_permission_required)
-    }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) scope.launch { imageUri = salvarImagemLocal(context, uri) ?: uri.toString() }
-    }
-    var cameraUri by remember { mutableStateOf<Uri?>(null) }
-    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { captured ->
-        if (captured) cameraUri?.let { uri -> scope.launch { imageUri = salvarImagemLocal(context, uri) ?: uri.toString() } }
-    }
-    val requestCamera = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) {
-            cameraUri = createCameraUri(context)
-            cameraUri?.let(camera::launch)
-        }
     }
 
     Scaffold(
