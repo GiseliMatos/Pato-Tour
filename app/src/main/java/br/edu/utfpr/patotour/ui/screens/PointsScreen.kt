@@ -69,7 +69,7 @@
                      leadingIcon = { Text("⌕", fontSize = 28.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                      placeholder = { Text(stringResource(R.string.search_points)) },
                      singleLine = true,
-                     shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(16.dp)
                  )
              }
              item {

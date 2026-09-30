@@ -33,7 +33,10 @@
     <string name="get_address">Get address</string>
     <string name="address_unavailable">Address unavailable offline</string>
     <string name="coordinates_required">Enter valid latitude and longitude.</string>
-    <string name="required_fields">Fill in name, latitude and longitude.</string>
+    <string name="location_unavailable">Your current location could not be obtained.</string>
+    <string name="location_permission_required">Allow location access to fill the address automatically.</string>
+    <string name="address_current_location_hint">No coordinates? We will use your current location.</string>
+    <string name="required_fields">Fill in name, description, photo, latitude and longitude.</string>
     <string name="upload_photo">Add point photo</string>
     <string name="photo_hint">High quality images are recommended</string>
     <string name="take_photo">Take a photo</string>
