@@ -35,6 +35,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import br.edu.utfpr.patotour.R
 import br.edu.utfpr.patotour.preferences.ConfiguracoesPreferences
 import br.edu.utfpr.patotour.storage.Armazenamento
@@ -76,6 +78,10 @@ fun ConfiguracoesScreen(
         var tipoMapa by remember {
             mutableStateOf(configuracoesPreferences.obterTipoMapa())
         }
+
+        val idiomasDoApp = AppCompatDelegate.getApplicationLocales()
+        val idiomaAutomatico = idiomasDoApp.isEmpty
+        val idiomaAtual = idiomasDoApp.toLanguageTags()
 
         var tamanhoArmazenamento by remember {
             mutableStateOf("")
@@ -211,6 +217,69 @@ fun ConfiguracoesScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
+                text = stringResource(R.string.language),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = stringResource(R.string.app_language),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    IdiomaButton(
+                        texto = stringResource(R.string.language_automatic),
+                        selecionado = idiomaAutomatico,
+                        onClick = {
+                            AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    IdiomaButton(
+                        texto = stringResource(R.string.language_portuguese),
+                        selecionado = !idiomaAutomatico && idiomaAtual.startsWith("pt", ignoreCase = true),
+                        onClick = {
+                            AppCompatDelegate.setApplicationLocales(
+                                LocaleListCompat.forLanguageTags("pt-BR")
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    IdiomaButton(
+                        texto = stringResource(R.string.language_english),
+                        selecionado = !idiomaAutomatico && idiomaAtual.startsWith("en", ignoreCase = true),
+                        onClick = {
+                            AppCompatDelegate.setApplicationLocales(
+                                LocaleListCompat.forLanguageTags("en")
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
                 text = stringResource(R.string.data),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
@@ -307,6 +376,20 @@ fun ConfiguracoesScreen(
                 }
             )
         }
+    }
+}
+
+@Composable
+private fun IdiomaButton(
+    texto: String,
+    selecionado: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (selecionado) {
+        Button(onClick = onClick, modifier = modifier) { Text(texto) }
+    } else {
+        OutlinedButton(onClick = onClick, modifier = modifier) { Text(texto) }
     }
 }
 

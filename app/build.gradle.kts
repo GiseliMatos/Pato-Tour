@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.maps.compose)
     implementation(libs.play.services.location)
     implementation(libs.androidx.exifinterface)
+    implementation(libs.androidx.appcompat)
 
     // Room com KSP
     implementation(libs.androidx.room.runtime)
