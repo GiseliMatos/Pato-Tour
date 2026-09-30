@@ -64,9 +64,9 @@ fun MapScreen(
     val scope = rememberCoroutineScope()
 
     var query by rememberSaveable { mutableStateOf("") }
-    var selected by remember { mutableStateOf(focusPoint) }
-    var detalhesAbertos by remember { mutableStateOf<PontoTuristico?>(null) }
-    var hasLocationPermission by remember { mutableStateOf(hasAnyLocationPermission(context)) }
+    var selected by rememberSaveable { mutableStateOf(focusPoint) }
+    var detalhesAbertos by rememberSaveable { mutableStateOf<PontoTuristico?>(null) }
+    var hasLocationPermission by rememberSaveable { mutableStateOf(hasAnyLocationPermission(context)) }
     val requestLocation = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) {
@@ -85,6 +85,7 @@ fun MapScreen(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(initialTarget, zoom)
     }
+    var cameraInitialized by rememberSaveable { mutableStateOf(false) }
 
     fun moverPara(ponto: PontoTuristico) {
         selected = ponto
@@ -113,10 +114,13 @@ fun MapScreen(
 
     // Se veio de "Ver no mapa", vai até o ponto. Sem foco definido, centraliza na localização atual.
     LaunchedEffect(focusPoint, hasLocationPermission) {
-        if (focusPoint != null) {
-            moverPara(focusPoint)
-        } else {
-            centerOnCurrentLocation()
+        if (!cameraInitialized) {
+            if (focusPoint != null) {
+                moverPara(focusPoint)
+            } else {
+                centerOnCurrentLocation()
+            }
+            cameraInitialized = true
         }
     }
 
